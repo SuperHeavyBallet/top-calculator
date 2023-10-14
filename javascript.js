@@ -1,170 +1,138 @@
-let firstNumber = "";
-let firstNumberAsNumber = 0;
-
-let hasPressedOperator = false;
-
-let secondNumber = "";
-let secondNumberAsNumber = 0;
-let operator = ""
-
-let endNumber = 0;
-
-let display = document.querySelector(".display");
-
-let numberButtons = document.querySelectorAll(".number-button");
-
-
-numberButtons.forEach(numberButton => 
-   numberButton.addEventListener("click", addToNumber)
-);
-        
-
-function addToNumber(event)
-{
-    const button = event.target;
-    if (!hasPressedOperator)
-    {
-        firstNumber += button.value;
-        firstNumberAsNumber = parseInt(firstNumber);
-
-        display.textContent = firstNumber;
-        console.log("First" +  (typeof(firstNumberAsNumber)) + ": " + firstNumber);
-    }
-    else if (hasPressedOperator)
-    {
-        secondNumber += button.value;
-        secondNumberAsNumber = parseInt(secondNumber)
-        display.textContent = secondNumber;
-        console.log("Second" +  (typeof(secondNumberAsNumber)) + ": " + secondNumber);
-
-    }
-}
-
-
-let operatorButtons = document.querySelectorAll(".operator-button");
-
-operatorButtons.forEach(operatorButton =>
-    operatorButton.addEventListener("click", selectOperator)
-);
-
-function selectOperator(event)
-{
-
-    const button = event.target;
-    operator = button.value;
-    display.textContent = " ";
-    hasPressedOperator = true;
-    console.log(firstNumberAsNumber);
-    console.log(operator);
-
-}
-
-let equalsButton = document.querySelector(".equal-button");
-
-equalsButton.addEventListener("click", operate);
-
-function operate()
-{
-    switch (operator){
-
-        case "+":
-            
-            endNumber = firstNumberAsNumber + secondNumberAsNumber;
-            console.log(endNumber);
-            display.textContent = endNumber;
-            break;
-
-        case "-":
-            endNumber = firstNumberAsNumber - secondNumberAsNumber;
-            console.log(endNumber);
-            display.textContent = endNumber;
-            break;
-        case "x":
-            endNumber = firstNumberAsNumber * secondNumberAsNumber;
-            console.log(endNumber);
-            display.textContent = endNumber;
-            break;
-        case "/":
-            endNumber = firstNumberAsNumber / secondNumberAsNumber;
-            console.log(endNumber);
-            display.textContent = endNumber;
-            break;
-        default :
-            return "ERROR"; 
+class Calculator {
+    constructor(previousOperandTextElement, currentOperandTextElement){
+        this.previousOperandTextElement = previousOperandTextElement;
+        this.currentOperandTextElement = currentOperandTextElement;
+        this.clear();
     }
 
-}
+    clear(){
+        this.currentOperand = '';
+        this.previousOperand = '';
+        this.operation = undefined;
 
-/*
-let number1 = parseInt(prompt("Pick your first number"));
+    }
 
-let number2 = parseInt(prompt("Pick your second number"));
+    delete(){
+        this.currentOperand = this.currentOperand.toString().slice(0, -1);
 
+    }
 
-let totalNumber = 0;
+    appendNumber(number){
+        if (number === '.' && this.currentOperand.includes('.')) return;
+        this.currentOperand = this.currentOperand.toString() + number.toString();
 
-let functionChoice = parseInt(prompt("What would you like to do? \n 1. Add \n 2. Subtract \n 3. Multiply \n 4. Divide"));
+    }
 
-chooseFunction(functionChoice);
+    chooseOperation(operation){
+        if(this.currentOperand === '') return;
+        if (this.previousOperand !== ''){
+            this.compute();
+        }
+        this.operation = operation;
+        this.previousOperand = this.currentOperand;
+        this.currentOperand = '';
 
-function chooseFunction(chosenNumber)
-{
-    switch (chosenNumber){
-            case 1 :
-            Add(number1, number2);
-            break;
+    }
 
-            case 2:
-            Subtract(number1, number2);
-            break;
-
-            case 3:
-            Multiply(number1, number2);
-            break;
-
-            case 4:
-            Divide(number1, number2);
-            break;
-            
+    compute(){
+        let computation;
+        const prev = parseFloat(this.previousOperand);
+        const current = parseFloat(this.currentOperand);
+        if (isNaN(prev) || isNaN(current)) return;
+        switch (this.operation){
+            case '+':
+                computation = prev + current;
+                break;
+            case '-':
+                computation = prev - current;
+                break;
+            case '*':
+                computation = prev * current;
+                break;
+            case '÷':
+                computation = prev / current;
+                break;
             default:
-            alert("Not a Valid Choice.");
+                return;
+        }
+        this.currentOperand = computation;
+        this.operation = undefined;
+        this.previousOperand = '';
+
     }
+
+    getDisplayNumber(number){
+        const stringNumber = number.toString();
+        const integerDigits = parseFloat(stringNumber.split('.')[0]);
+        const decimalDigits = stringNumber.split('.')[1];
+        let integerDisplay;
+        if (isNaN(integerDigits)){
+            integerDisplay = '';
+        } else{
+            integerDisplay = integerDigits.toLocaleString('en', {
+                maximumFractionDigits: 0
+            })
+        }
+        if (decimalDigits != null) {
+            return `${integerDisplay}.${decimalDigits}`;
+        } else {
+            return integerDisplay;
+        }
+    }
+
+    updateDisplay(){
+        this.currentOperandTextElement.innerText = this.getDisplayNumber(this.currentOperand);
+        if (this.operation != null) {
+            this.previousOperandTextElement.innerText =
+            `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+        } else {
+            this.previousOperandTextElement.innerText = '';
+        }
+        
+    }
+
+
 }
 
-function Add(number1, number2, ...otherNumbers)
-{
-    console.log("ADD");
+const numberButtons = document.querySelectorAll('[data-number]');
+const operationButtons = document.querySelectorAll('[data-operation]');
+const equalsButton = document.querySelector('[data-equals]');
+const deleteButton = document.querySelector('[data-delete]');
+const allClearButton = document.querySelector('[data-all-clear]');
+const previousOperandTextElement = document.querySelector('[data-previous-operand]');
+const currentOperandTextElement = document.querySelector('[data-current-operand]'); 
 
-    totalNumber = number1 + number2;
+const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
 
-    console.log(totalNumber);
+numberButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        
+        calculator.appendNumber(button.innerText);
+        calculator.updateDisplay();
+    })
+})
 
-}
+operationButtons.forEach(button => {
+    button.addEventListener('click', () => {
 
-function Subtract(number1, number2, ...otherNumbers)
-{
-    console.log("SUBTRACT");
+        calculator.chooseOperation(button.innerText);
+        calculator.updateDisplay();
 
-    totalNumber = number1 - number2;
+    })
+})
 
-    console.log(totalNumber);
-}
+equalsButton.addEventListener('click', button => {
+    calculator.compute();
+    calculator.updateDisplay();
+})
 
-function Multiply(number1, number2, ...otherNumbers)
-{
-    console.log("MULTIPLY");
+allClearButton.addEventListener('click', button => {
 
-    totalNumber = number1 * number2;
+    calculator.clear();
+    calculator.updateDisplay();
+})
 
-    console.log(totalNumber);
-}
-
-function Divide(number1, number2, ...otherNumbers)
-{
-    console.log("DIVIDE");
-
-    totalNumber = number1 / number2;
-
-    console.log(totalNumber);
-}
-*/
+deleteButton.addEventListener('click', button => {
+    calculator.delete();
+    calculator.updateDisplay();
+})
